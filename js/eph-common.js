@@ -319,8 +319,10 @@ function generateFigure(filename, classNames = []) {
       '</figure>'
     );
   }
-  else {
-    return `<figure class="${classNames.join(' ')} nodata">Belum ada foto. <a href="#kontrib" style="border:none;" class="sunting-linktambah">Tambahkan!</a></figure>`;
+else {
+    let namaAmanURL = encodeURIComponent(record.title);
+    let gFormFotoUrl = `https://docs.google.com/forms/d/e/1FAIpQLSd7_u-7yCwDtXIkDO--bILry6mWGoRCnnfSumL_PEjfle0aLg/viewform?usp=pp_url&entry.2138396049=${namaAmanURL}`;
+    return `<figure class="${classNames.join(' ')} nodata">Belum ada foto. <a href="${gFormFotoUrl}" target="_blank" rel="noopener noreferrer" style="border:none;" class="sunting-linktambah">Tambahkan!</a></figure>`;
   }
 }
 
