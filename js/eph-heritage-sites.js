@@ -124,18 +124,25 @@ function populateProvinceTypesData() {
   let namaKueri = (currentKategoriUtama === 'alam') ? 'general' : currentKategoriUtama;
   let baseQuery = KUMPULAN_KUERI_0[namaKueri];
   
-  // 3. Suntikkan Dropdown Wilayah
-  let wilayahClause = '';
+  // 3. Suntikkan Dropdown Wilayah dengan Logika UNION Skenario 1 dan 2
+  let wilayahClause1 = '';
+  let wilayahClause2 = '';
+  
   if (provInput === 'all') {
-    wilayahClause = '{ SELECT ?provinsi WHERE { ?provinsi wdt:P31 wd:Q5098 . } }';
+    // Jika "Semua Wilayah", cari semua entitas provinsi, ATAU yang langsung ke Q252 (Indonesia)
+    wilayahClause1 = '?provinsi wdt:P31 wd:Q5098 .';
+    wilayahClause2 = 'BIND(wd:Q252 AS ?p131Lokasi)';
   } else {
-wilayahClause = `{ SELECT ?provinsi WHERE { ?provinsi wdt:P131 ${provInput} . } }`;
+    // Jika wilayah spesifik, kunci ?provinsi (Skenario 1) atau kunci langsung lokasinya (Skenario 2)
+    wilayahClause1 = `BIND(${provInput} AS ?provinsi)`;
+    wilayahClause2 = `BIND(${provInput} AS ?p131Lokasi)`;
   }
   
-  // 4. Rakit kueri final
+  // 4. Rakit kueri final (Gunakan regex /.../g untuk memastikan semua instans terganti)
   let dynamicQuery = baseQuery
-    .replace('<PLACEHOLDER_WILAYAH>', wilayahClause)
-    .replace('<PLACEHOLDER_JENIS>', inputTxt);
+    .replace(/<PLACEHOLDER_WILAYAH_1>/g, wilayahClause1)
+    .replace(/<PLACEHOLDER_WILAYAH_2>/g, wilayahClause2)
+    .replace(/<PLACEHOLDER_JENIS>/g, inputTxt);
 
   return queryWdqsThenProcess(
     dynamicQuery,
@@ -812,6 +819,7 @@ function populateHistoricalImagesData(qid) {
 
   record.vicinityImages = [];
   record.pastImage = undefined;
+  record.interiorImage = undefined; // Inisialisasi variabel baru
 
   return queryWdqsThenProcess(
     queryStr,
@@ -833,6 +841,15 @@ function populateHistoricalImagesData(qid) {
           record.pastImage = { file: filename, caption: captionText };
         }
       }
+
+      // === PENANGKAP PEMANDANGAN DALAM (INTERIOR) ===
+      if ('interiorImage' in result) {
+        if (!record.interiorImage) { 
+          let filename = extractImageFilename(result.interiorImage);
+          let captionText = result.interiorCaption ? result.interiorCaption.value : '';
+          record.interiorImage = { file: filename, caption: captionText };
+        }
+      }
     },
     function() {
       renderHistoricalImagesInPanel(qid);
@@ -850,7 +867,7 @@ function renderHistoricalImagesInPanel(qid) {
   let html = '';
   
   function buildImageBlock(imgObj) {
-    let block = '<div class="arsip-block" style="overflow: hidden;">';
+    let block = '<div class="arsip-block" style="overflow: hidden; margin-bottom: 10px;">';
     block += generateFigure(imgObj.file);
     if (imgObj.caption && imgObj.caption.trim() !== '') {
       block += `<div class="article main-text"><p>${imgObj.caption}</p></div>`;
@@ -861,11 +878,20 @@ function renderHistoricalImagesInPanel(qid) {
     return block;
   }
 
+  // Render Pemandangan Masa Lalu
   if (record.pastImage) {
     html += buildImageBlock(record.pastImage);
   }
+
+  // === RENDER PEMANDANGAN DALAM (INTERIOR) ===
+  if (record.interiorImage) {
+    html += '<h3 style="margin: 15px 0 5px; font-size: 15px; color:#555;">Pemandangan Dalam</h3>';
+    html += buildImageBlock(record.interiorImage);
+  }
   
+  // Render Pemandangan Sekitar
   if (record.vicinityImages && record.vicinityImages.length > 0) {
+    html += '<h3 style="margin: 15px 0 5px; font-size: 15px; color:#555;">Lingkungan Sekitar</h3>';
     record.vicinityImages.forEach(imgObj => {
       html += buildImageBlock(imgObj);
     });
@@ -1008,6 +1034,7 @@ class Record {
     this.events = [];
     this.areaTags = new Set();
     this.vicinityImages = [];
+    this.interiorImage = undefined;
   }
 }
 
