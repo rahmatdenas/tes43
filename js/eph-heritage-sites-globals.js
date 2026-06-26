@@ -38,9 +38,9 @@ WHERE {
   <PLACEHOLDER_WILAYAH_1>
   
   ?site wdt:P31 ?jenis ;
-        wdt:P159  ?kantor .
+        wdt:P159  ?p131Lokasi .
   
-  ?kantor wdt:P131* ?provinsi .
+  ?p131Lokasi wdt:P131* ?provinsi .
   
   OPTIONAL { 
     ?site p:P571 ?inceptionStmt .
@@ -62,9 +62,9 @@ WHERE {
   <PLACEHOLDER_WILAYAH_1>
   
   ?site wdt:P31 ?jenis ;
-        wdt:P291  ?terbitdi .
+        wdt:P291  ?p131Lokasi .
   
-  ?terbitdi wdt:P131* ?provinsi .
+  ?p131Lokasi wdt:P131* ?provinsi .
   
   OPTIONAL { 
     ?site p:P571 ?inceptionStmt .
@@ -86,9 +86,9 @@ WHERE {
   <PLACEHOLDER_WILAYAH_1>
   
   ?site wdt:P31 ?jenis ;
-        wdt:P840  ?latar .
+        wdt:P840  ?p131Lokasi .
   
-  ?latar wdt:P131* ?provinsi .
+  ?p131Lokasi wdt:P131* ?provinsi .
   
   OPTIONAL { 
     ?site p:P571 ?inceptionStmt .
@@ -186,8 +186,8 @@ const KUMPULAN_KUERI_1 = {
   
   'pers': `SELECT DISTINCT ?siteQid ?coord WHERE {
     VALUES ?site { <PLACEHOLDER_QIDS> }
-    ?site wdt:P159 ?kantor .
-    ?kantor p:P625 ?coordStatement .
+    ?site wdt:P159 ?p131Lokasi .
+    ?p131Lokasi p:P625 ?coordStatement .
     ?coordStatement ps:P625 ?coord .
     FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
     BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
@@ -195,8 +195,8 @@ const KUMPULAN_KUERI_1 = {
 
   'publikasi': `SELECT DISTINCT ?siteQid ?coord WHERE {
     VALUES ?site { <PLACEHOLDER_QIDS> }
-    ?site wdt:P291 ?terbitdi .
-    ?terbitdi p:P625 ?coordStatement .
+    ?site wdt:P291 ?p131Lokasi .
+    ?p131Lokasi p:P625 ?coordStatement .
     ?coordStatement ps:P625 ?coord .
     FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
     BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
@@ -204,8 +204,8 @@ const KUMPULAN_KUERI_1 = {
 
   'fiksi': `SELECT DISTINCT ?siteQid ?coord WHERE {
     VALUES ?site { <PLACEHOLDER_QIDS> }
-    ?site wdt:P840 ?latar .
-    ?latar p:P625 ?coordStatement .
+    ?site wdt:P840 ?p131Lokasi .
+    ?p131Lokasi p:P625 ?coordStatement .
     ?coordStatement ps:P625 ?coord .
     FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
     BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
@@ -213,16 +213,16 @@ const KUMPULAN_KUERI_1 = {
 
   'tokoh': `SELECT DISTINCT ?siteQid ?coord WHERE {
     VALUES ?site { <PLACEHOLDER_QIDS> }
-    ?site wdt:P19 ?lahir .
-    ?lahir p:P625 ?coordStatement .
+    ?site wdt:P19 ?p131Lokasi .
+    ?p131Lokasi p:P625 ?coordStatement .
     ?coordStatement ps:P625 ?coord .
     FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
     BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
   }`,
   'bahasa': `SELECT DISTINCT ?siteQid ?coord WHERE {
     VALUES ?site { <PLACEHOLDER_QIDS> }
-    ?site wdt:P2341 ?berasaldari .
-    ?berasaldari p:P625 ?coordStatement .
+    ?site wdt:P2341 ?p131Lokasi .
+    ?p131Lokasi p:P625 ?coordStatement .
     ?coordStatement ps:P625 ?coord .
     FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
     BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
@@ -230,8 +230,8 @@ const KUMPULAN_KUERI_1 = {
 
   'kuliner': `SELECT DISTINCT ?siteQid ?coord WHERE {
     VALUES ?site { <PLACEHOLDER_QIDS> }
-    ?site wdt:P276 ?asal .
-    ?asal p:P625 ?coordStatement .
+    ?site wdt:P276 ?p131Lokasi .
+    ?p131Lokasi p:P625 ?coordStatement .
     ?coordStatement ps:P625 ?coord .
     FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
     BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
