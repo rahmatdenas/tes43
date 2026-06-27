@@ -866,8 +866,8 @@ let wikiUrlUtama = `https://www.wikidata.org/wiki/${qid}`;
     showTahun = false; 
   }
   else if (currentKategoriUtama === 'alam') {
-    // Jika ingin pakai format: "(Nama Klaster) Khas", uncomment baris di bawah:
-    // prefixLokasi = `${currentNamaKlaster} khas`;
+
+    prefixLokasi = `${currentNamaKlaster} khas`;
     prefixLokasi = 'Lokasi'; 
     showTahun = false; 
   }
