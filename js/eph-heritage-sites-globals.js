@@ -126,18 +126,33 @@ function getSparqlQuery5(qid) {
 }
 
 function getSparqlQuery6(qid) {
-  // Ambil klaster yang sedang aktif
   let klaster = typeof currentNamaKlaster !== 'undefined' ? currentNamaKlaster : 'Objek';
 
   // 1. Data Universal (Semua Klaster Bisa Punya)
-  let selectClause = `SELECT ?siteQid (SAMPLE(?ketinggianVal) AS ?ketinggian) (SAMPLE(?luasVal) AS ?luas) `;
+  // Perhatikan ?luasData sekarang berupa gabungan "Angka|Satuan|KeteranganP518"
+  let selectClause = `SELECT ?siteQid (SAMPLE(?ketinggianVal) AS ?ketinggian) (SAMPLE(?luasData) AS ?luas) `;
   let whereClause = `
     VALUES ?site { wd:${qid} }
     OPTIONAL { ?site wdt:P2044 ?ketinggianVal . }
-    OPTIONAL { ?site wdt:P2046 ?luasVal . }
+    OPTIONAL {
+      ?site p:P2046 ?luasStmt .
+      ?luasStmt psn:P2046 ?luasNode .
+      ?luasNode wikibase:quantityAmount ?luasVal .
+      OPTIONAL { 
+        ?luasNode wikibase:quantityUnit ?luasUnitItem . 
+        ?luasUnitItem rdfs:label ?luasUnitLabel . 
+        FILTER(LANG(?luasUnitLabel) = "id") 
+      }
+      OPTIONAL { 
+        ?luasStmt pq:P518 ?luasBagianItem . 
+        ?luasBagianItem rdfs:label ?luasBagianLabel . 
+        FILTER(LANG(?luasBagianLabel) = "id") 
+      }
+      BIND(CONCAT(STR(?luasVal), "|", IF(BOUND(?luasUnitLabel), ?luasUnitLabel, ""), "|", IF(BOUND(?luasBagianLabel), ?luasBagianLabel, "")) AS ?luasData)
+    }
   `;
 
-  // 2. KLASTER BANGUNAN & FASILITAS (Termasuk Museum dan Stasiun)
+  // 2. KLASTER BANGUNAN & FASILITAS
   const klasterBangunan = [
     'Masjid', 'Bangunan bersejarah', 'Gereja & katedral', 'Vihara & kelenteng', 
     'Rumah sakit', 'Universitas & kampus', 'Perpustakaan', 'Istana', 'Bandar udara', 
@@ -180,16 +195,34 @@ function getSparqlQuery6(qid) {
     whereClause += `OPTIONAL { ?site wdt:P81 ?jalurItem . ?jalurItem rdfs:label ?jalurLabel . FILTER(LANG(?jalurLabel) = "id") }`;
   }
   else if (klaster === 'Museum') {
-    selectClause += `(SAMPLE(?koleksiVal) AS ?jumlahKoleksi) (GROUP_CONCAT(DISTINCT ?spesialisasiLabel; separator=", ") AS ?spesialisasiList) `;
+    // Koleksi dimodifikasi agar menarik P1436 ke level node dan mengambil satuannya
+    selectClause += `(SAMPLE(?koleksiData) AS ?jumlahKoleksi) (GROUP_CONCAT(DISTINCT ?spesialisasiLabel; separator=", ") AS ?spesialisasiList) `;
     whereClause += `
-      OPTIONAL { ?site wdt:P1436 ?koleksiVal . }
+      OPTIONAL {
+        ?site p:P1436 ?koleksiStmt .
+        ?koleksiStmt psn:P1436 ?koleksiNode .
+        ?koleksiNode wikibase:quantityAmount ?koleksiVal .
+        OPTIONAL { 
+          ?koleksiNode wikibase:quantityUnit ?koleksiUnitItem . 
+          ?koleksiUnitItem rdfs:label ?koleksiUnitLabel . 
+          FILTER(LANG(?koleksiUnitLabel) = "id") 
+        }
+        BIND(CONCAT(STR(?koleksiVal), "|", IF(BOUND(?koleksiUnitLabel), ?koleksiUnitLabel, "")) AS ?koleksiData)
+      }
       OPTIONAL { ?site wdt:P101 ?spesialisasiItem . ?spesialisasiItem rdfs:label ?spesialisasiLabel . FILTER(LANG(?spesialisasiLabel) = "id") }
     `;
   }
   else if (['Prasasti dan arca', 'Situs arkeologi', 'Artefak'].includes(klaster)) {
-    selectClause += `(SAMPLE(?tglTemuVal) AS ?tglTemu) (SAMPLE(?tempatTemuLabel) AS ?tempatTemu) `;
+    // Tanggal temu dimodifikasi mengambil node psv: untuk mendeteksi timePrecision
+    selectClause += `(SAMPLE(?tglTemuData) AS ?tglTemu) (SAMPLE(?tempatTemuLabel) AS ?tempatTemu) `;
     whereClause += `
-      OPTIONAL { ?site wdt:P575 ?tglTemuVal . }
+      OPTIONAL {
+        ?site p:P575 ?tglTemuStmt .
+        ?tglTemuStmt psv:P575 ?tglTemuNode .
+        ?tglTemuNode wikibase:timeValue ?tglTemuVal ; 
+                     wikibase:timePrecision ?tglTemuPrec .
+        BIND(CONCAT(STR(?tglTemuVal), "|", STR(?tglTemuPrec)) AS ?tglTemuData)
+      }
       OPTIONAL { ?site wdt:P189 ?tempatTemuItem . ?tempatTemuItem rdfs:label ?tempatTemuLabel . FILTER(LANG(?tempatTemuLabel) = "id") }
     `;
   }
@@ -231,9 +264,16 @@ function getSparqlQuery6(qid) {
     `;
   }
   else if (klaster === 'Tokoh') {
-    selectClause += `(SAMPLE(?wafatVal) AS ?tglWafat) (GROUP_CONCAT(DISTINCT ?kerjaLabel; separator=", ") AS ?pekerjaanList) (GROUP_CONCAT(DISTINCT ?ahliLabel; separator=", ") AS ?spesialisasiList) `;
+    // Tanggal wafat dimodifikasi mengambil node psv: untuk presisi
+    selectClause += `(SAMPLE(?wafatData) AS ?tglWafat) (GROUP_CONCAT(DISTINCT ?kerjaLabel; separator=", ") AS ?pekerjaanList) (GROUP_CONCAT(DISTINCT ?ahliLabel; separator=", ") AS ?spesialisasiList) `;
     whereClause += `
-      OPTIONAL { ?site wdt:P570 ?wafatVal . }
+      OPTIONAL {
+        ?site p:P570 ?wafatStmt .
+        ?wafatStmt psv:P570 ?wafatNode .
+        ?wafatNode wikibase:timeValue ?wafatVal ; 
+                   wikibase:timePrecision ?wafatPrec .
+        BIND(CONCAT(STR(?wafatVal), "|", STR(?wafatPrec)) AS ?wafatData)
+      }
       OPTIONAL { ?site wdt:P106 ?kerjaItem . ?kerjaItem rdfs:label ?kerjaLabel . FILTER(LANG(?kerjaLabel) = "id") }
       OPTIONAL { ?site wdt:P101 ?ahliItem . ?ahliItem rdfs:label ?ahliLabel . FILTER(LANG(?ahliLabel) = "id") }
     `;
@@ -247,7 +287,6 @@ function getSparqlQuery6(qid) {
     whereClause += `OPTIONAL { ?site wdt:P1120 ?korbanVal . }`;
   }
 
-  // Gabungkan semua kepingan menjadi satu Kueri Utuh
   return `${selectClause} WHERE { ${whereClause} BIND (SUBSTR(STR(?site), 32) AS ?siteQid) } GROUP BY ?siteQid`;
 }
 
