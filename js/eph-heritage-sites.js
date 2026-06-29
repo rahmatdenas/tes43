@@ -991,7 +991,7 @@ let isBersejarah = false;
   let prefixTahun = 'Didirikan';
 
   // 1. Pengecualian Khusus (Overrides)
-  if (['Wilayah Administratif'].includes(currentNamaKlaster)) {
+ if (['Wilayah Administratif'].includes(currentNamaKlaster)) {
     prefixLokasi = 'Provinsi';
     prefixTahun = 'Hari jadi';
   } else if (['Tokoh'].includes(currentNamaKlaster)) {
@@ -1009,12 +1009,18 @@ let isBersejarah = false;
   } else if (['Lontar', 'Naskah'].includes(currentNamaKlaster)) {
     prefixLokasi = 'Koleksi';
     prefixTahun = 'Disalin';
-  } else if (['Gempa bumi dan tsunami', 'Bencana lainnya', 'Peristiwa lainnya', 'Perang & konflik'].includes(currentNamaKlaster)) {
-    prefixLokasi = 'Pusat/lokasi kejadian';
-    prefixTahun = 'Terjadi pada';
-  } else if (['Situs arkeologi', 'Prasasti'].includes(currentNamaKlaster)) {
+  } else if (['Gempa bumi dan tsunami', 'Peristiwa lainnya', 'Perang & konflik', 'Bencana lainnya'].includes(currentNamaKlaster)) {
+    prefixLokasi = 'Tempat kejadian/terdampak';
+    prefixTahun = 'Pada';
+  } else if (['Menhir & dolmen'].includes(currentNamaKlaster)) {
     prefixLokasi = 'Terletak di';
     prefixTahun = 'Peninggalan';
+  }   else if (['Situs arkeologi'].includes(currentNamaKlaster)) {
+    prefixLokasi = 'Terletak di';
+    prefixTahun = 'Era/periode';
+  } else if (['Prasasti', 'Artefak'].includes(currentNamaKlaster)) {
+    prefixLokasi = 'Terdapat di';
+    prefixTahun = 'Tarikh';
   }
   // 2. Kategori Alam (Mematikan Tahun & Modifikasi Terletak)
   if (currentKategoriUtama === 'alam') {
